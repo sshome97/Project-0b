@@ -14,11 +14,10 @@ def initial_state():
     """
     Returns starting state of the board.
     """
-    #return [[O, EMPTY, O],
-     #       [O, X, X],
-      #      [X, EMPTY, EMPTY]]
 
-    return [[EMPTY, EMPTY, EMPTY],[EMPTY, EMPTY, EMPTY],[EMPTY, EMPTY, EMPTY]]
+    return [[EMPTY, EMPTY, EMPTY],
+            [EMPTY, EMPTY, EMPTY],
+            [EMPTY, EMPTY, EMPTY]]
 
 
 def player(board):
@@ -27,11 +26,13 @@ def player(board):
     """
     X_counter = 0
     O_counter = 0
+    #empty board means player X turn
     if board == EMPTY:
         return X
     elif terminal(board) == True:
-        return "Game Over"
+        return None
 
+    #count how many X and O's on board to determine player turn
     for i in range(3):
         for j in range(3):
             if board[i][j] == X:
@@ -51,7 +52,7 @@ def actions(board):
     if terminal(board) == True:
         return "Game Over"
     else:
-        #check if player X or O?
+        #find empty spaces available for move on board
         actions_set = []
         for i in range(3):
             for j in range(3):
@@ -66,7 +67,9 @@ def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
     """
+    #copy of game board
     copy_board = copy.deepcopy(board)
+    #action returned in (i,j) form, must convert for list
     x = action[0]
     y = action[1]
     for i in range(3):
@@ -84,8 +87,7 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    diag = []
-    opp_diag = []
+    #convert board into list of columns rather than rows
     columns = list(zip(*board))
     # checking each row/column for 3 straight
     for i in range(3):
@@ -97,6 +99,7 @@ def winner(board):
             return O
         elif columns[i].count(O) == 3:
             return O
+    #check diagonals
     if board[0][0] == X and board[1][1] == X and board[2][2] == X:
         return X
     elif board[2][0] == X and board[1][1] == X and board[0][2] == X:
@@ -150,82 +153,58 @@ def minimax(board):
     if player(board) == X:
         v = -math.inf
         for action in actions(board):
+            #for alpha beta pruning
             if action != actions(board)[0]:
-                print(action)
                 temp_v = min_value(result(board, action), False)
-                print("not first action minimax")
-                print(temp_v)
             else:
-                print(action)
                 temp_v = min_value(result(board,action), True)
-                print("first action minimax")
-                print(temp_v)
             if temp_v > v:
                 v = temp_v
                 optimal_move = action
 
-        print("solution")
-        print(v)
-        print(optimal_move)
         return optimal_move
     else:
         v = math.inf
         for action in actions(board):
+            #for alpha beta pruning
             if action != actions(board)[0]:
-                print(action)
                 temp_v = max_value(result(board,action), False)
-                print("not first action minimax")
-                print(temp_v)
             else:
-                print(action)
                 temp_v = max_value(result(board,action), True)
-                print("first action minimax")
-                print(temp_v)
             if temp_v < v:
                 v = temp_v
                 optimal_move = action
         return optimal_move
 
+#is_first_action used for alpha beta pruning, once first action finished, we can use the solution from first action to determine whether we can skip possible following actions
 def max_value(board, is_first_action):
     v = -math.inf
+    #compare used as cpu picked value for first possible action made, all other actions following are compared to compare to determine if we can skip iterations (or possible actions)
     global compare
     if terminal(board):
         return utility(board)
 
     if is_first_action:
         for action in actions(board):
-            print(action)
             temp_value = min_value(result(board,action), True)
-            print("first action max")
-            print(temp_value)
             v = max(v,temp_value)
             compare = v
-            print("compare")
-            print(compare)
     else:
         for action in actions(board):
+            #need to atleast investigate first action to get a value-->else:-->after that we can compare the other actions and skip if necessary
             if action != actions(board)[0]:
-                print(action)
                 if v > compare:
-                    print("skipped")
+                    #do not need to check an action, skip
                     continue
                 else:
                     temp_value = min_value(result(board,action), False)
-                    print("not first action max")
-                    print(temp_value)
             else:
-                print(action)
                 temp_value = min_value(result(board,action), False)
-                print("first action max of not first action minimax")
-                print(temp_value)
             v = max(v, temp_value)
-            print("v in for loop")
-            print(v)
-        print("return")
-        print(v)
+
     return v
 
-
+#is_first_action used for alpha beta pruning, once first action finished, we can use the solution from first action to determine whether we can skip possible following actions
 def min_value(board, is_first_action):
     v = math.inf
     global compare
@@ -233,35 +212,23 @@ def min_value(board, is_first_action):
         return utility(board)
     if is_first_action:
         for action in actions(board):
-            print(action)
             temp_value = max_value(result(board,action), True)
-            print("first action min")
-            print(temp_value)
             v = min(v, temp_value)
             compare = v
-            print("compare")
-            print(compare)
 
     else:
         for action in actions(board):
+            #need to atleast investigate first action to get a value-->else:-->after that we can compare the other actions and skip if necessary
             if action != actions(board)[0]:
-                print(action)
                 if v < compare:
-                    print("skipped")
+                    #do not need to check action, skip
                     continue
                 else:
                     temp_value = max_value(result(board,action), False)
-                    print("not first action min")
-                    print(temp_value)
 
             else:
-                print(action)
                 temp_value = max_value(result(board,action), False)
-                print("first action min of not first action minimax")
-                print(temp_value)
             v = min(v, temp_value)
-    print("return")
-    print(v)
     return v
 
 
